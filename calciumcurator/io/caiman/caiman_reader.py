@@ -18,7 +18,12 @@ def make_caiman_contour_manager(img_components: np.ndarray) -> ContourManager:
 
 
 def caiman_reader(
-    pipeline_params, image_path, snr_path, trace_path, cell_path, spikes_path
+    pipeline_params,
+    image_path,
+    snr_path=None,
+    trace_path=None,
+    cell_path=None,
+    spikes_path=None,
 ):
     # we lazy load the caiman dependencies so it is not required
     with warnings.catch_warnings():
@@ -28,6 +33,7 @@ def caiman_reader(
         from caiman.source_extraction.cnmf.cnmf import load_CNMF
 
     # Load the image
+    print(image_path)
     im_registered = cm_load(image_path)
     data_range = calc_data_range(im_registered)
 

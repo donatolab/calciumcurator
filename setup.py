@@ -15,6 +15,11 @@ setup(
     url="https://github.com/donatolab/calciumcurator",
     license="GPL",
     packages=find_packages(),
-    entry_points={"console_scripts": ["calciumcurator=calciumcurator.__main__:main"]},
+    entry_points={
+        "console_scripts": [
+            "calciumcurator=calciumcurator.__main__:main",
+            "view-caiman=calciumcurator.view_cli:view_caiman",
+        ]
+    },
     zip_safe=False,
 )
