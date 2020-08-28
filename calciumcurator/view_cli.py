@@ -1,9 +1,9 @@
 import argparse
 import os
-import warnings
 
 from .calcium_curator import calcium_curator
 from .io.caiman.caiman_reader import caiman_reader
+from .io.caiman._vendored import load_dict_from_hdf5
 
 
 def parse_args():
@@ -21,18 +21,12 @@ def parse_args():
 
 
 def view_caiman():
-    # we lazy load the caiman dependencies so it is not required
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-        warnings.filterwarnings("ignore", category=FutureWarning)
-        from caiman.source_extraction.cnmf.cnmf import load_CNMF
-
     results_file, image_path, output_dir = parse_args()
 
-    cnm_obj = load_CNMF(results_file)
+    cnm_obj = load_dict_from_hdf5(results_file)
 
     if image_path == "":
-        im_name = os.path.basename(cnm_obj.mmap_file)
+        im_name = os.path.basename(cnm_obj["mmap_file"])
         results_dir = os.path.dirname(results_file)
         image_path = os.path.join(results_dir, im_name)
         if not os.path.isfile(image_path):
