@@ -171,11 +171,14 @@ def calcium_curator(
             accepted_cells_indices = np.argwhere(
                 snr[contour_manager.good_contour] > snr_thresh
             )
-            accepted_cells = np.zeros_like(cells[:, 0])
+            accepted_cells = np.zeros((f.shape[0],))
             accepted_cells[accepted_cells_indices] = 1
-            good_cells = np.hstack(
-                (np.expand_dims(accepted_cells, 1), np.expand_dims(cells[:, 1], 1))
-            )
+            if cells is not None:
+                good_cells = np.hstack(
+                    (np.expand_dims(accepted_cells, 1), np.expand_dims(cells[:, 1], 1))
+                )
+            else:
+                good_cells = accepted_cells
             np.save(output, good_cells)
 
         viewer.show()
