@@ -89,52 +89,61 @@ def calcium_curator(
                 current_frame = viewer.dims.point[0]
                 line_plot.update_vline(current_frame)
 
+        def update_selection(selected_index):
+            if selected_index is not None:
+                selected_contour = selected_index - 1
+
+                # clear any current selections
+                contour_manager.selected_contours = {}
+                selected_shapes.selected_data = np.arange(len(selected_shapes.data))
+                selected_shapes.remove_selected()
+
+                if selected_contour != -1:
+                    contour_manager.selected_contours = {selected_contour}
+                    selection_bbox = []
+                    contour = contour_manager.contours[selected_contour]
+                    min_r = np.min(contour[:, 0])
+                    min_c = np.min(contour[:, 1])
+                    max_r = np.max(contour[:, 0])
+                    max_c = np.max(contour[:, 1])
+
+                    selection_bbox.append(
+                        np.array(
+                            [
+                                [min_r, min_c],
+                                [min_r, max_c],
+                                [max_r, max_c],
+                                [max_r, min_c],
+                            ]
+                        )
+                    )
+                    selected_shapes.add(
+                        selection_bbox,
+                        shape_type="rectangle",
+                        face_color="transparent",
+                        edge_color="green",
+                    )
+                    update_plot(cell_indices=[selected_contour])
+
+            else:
+                line_plot.clear()
+
         def select_on_click(viewer, event):
             selected_layers = viewer.layers.selected
             if len(selected_layers) == 1:
 
                 if isinstance(selected_layers[0], napari.layers.Labels):
                     selected_index = selected_layers[0]._value
-                    if selected_index is not None:
-                        selected_contour = selected_index - 1
+                    update_selection(selected_index)
+                elif (snr_mask is not None) and (snr is not None):
+                    if selected_layers[0] is snr_image:
+                        visual = viewer.window.qt_viewer.layer_to_visual[good_labels]
+                        pos = list(event.pos)
+                        good_labels.position = visual._transform_position(pos)
+                        selected_index = good_labels._get_value()
 
-                        # clear any current selections
-                        contour_manager.selected_contours = {}
-                        selected_shapes.selected_data = np.arange(
-                            len(selected_shapes.data)
-                        )
-                        selected_shapes.remove_selected()
-
-                        if selected_contour != -1:
-                            contour_manager.selected_contours = {selected_contour}
-                            selection_bbox = []
-                            contour = contour_manager.contours[selected_contour]
-                            min_r = np.min(contour[:, 0])
-                            min_c = np.min(contour[:, 1])
-                            max_r = np.max(contour[:, 0])
-                            max_c = np.max(contour[:, 1])
-
-                            selection_bbox.append(
-                                np.array(
-                                    [
-                                        [min_r, min_c],
-                                        [min_r, max_c],
-                                        [max_r, max_c],
-                                        [max_r, min_c],
-                                    ]
-                                )
-                            )
-                            selected_shapes.add(
-                                selection_bbox,
-                                shape_type="rectangle",
-                                face_color="transparent",
-                                edge_color="green",
-                            )
-                            update_plot(cell_indices=[selected_contour])
-
-                    else:
-                        line_plot.clear()
-
+                        if selected_index is not None:
+                            update_selection(selected_index)
             yield
 
         viewer.mouse_drag_callbacks.append(select_on_click)
@@ -153,7 +162,8 @@ def calcium_curator(
                 good_labels.data = good_contours_image
                 bad_labels.data = bad_contours_image
 
-                snr_dragged()
+                if (snr_mask is not None) and (snr is not None):
+                    snr_dragged()
 
         @viewer.bind_key("q")
         def save_cells(viewer):
