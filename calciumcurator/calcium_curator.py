@@ -24,20 +24,12 @@ def calcium_curator(
 
     with napari.gui_qt():
         viewer = napari.view_image(
-            img, multiscale=False, contrast_limits=data_range, visible=False
+            img, multiscale=False, contrast_limits=data_range, visible=True
         )
-
-        # Add the cell labels
-        selected_shapes = viewer.add_shapes()
-        rejected_mask = contour_manager.make_rejected_mask()
-        bad_labels = viewer.add_labels(rejected_mask, visible=False)
-
-        accepted_mask = contour_manager.make_accepted_mask()
-        good_labels = viewer.add_labels(accepted_mask)
 
         # add the SNR widgets
         if (snr_mask is not None) and (snr is not None):
-            snr_image = viewer.add_image(snr_mask)
+            snr_image = viewer.add_image(snr_mask, visible=False)
             bins = np.linspace(np.int(snr.min()), np.int(snr.max()), 20)
             y, x = np.histogram(snr, bins=bins)
             hist = HistogramWidget(x, y)
@@ -63,6 +55,14 @@ def calcium_curator(
             hist.hist_plot.connect_line_dragged(snr_dragged)
 
             viewer.window.add_dock_widget(hist)
+
+        # Add the cell labels
+        selected_shapes = viewer.add_shapes()
+        rejected_mask = contour_manager.make_rejected_mask()
+        bad_labels = viewer.add_labels(rejected_mask, visible=False)
+
+        accepted_mask = contour_manager.make_accepted_mask()
+        good_labels = viewer.add_labels(accepted_mask)
 
         t = np.arange(len(f[0]))
         if spikes is not None:
