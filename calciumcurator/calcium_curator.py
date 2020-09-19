@@ -32,7 +32,7 @@ def calcium_curator(
             snr_image = viewer.add_image(snr_mask, visible=False)
             bins = np.linspace(np.int(snr.min()), np.int(snr.max()), 20)
             y, x = np.histogram(snr, bins=bins)
-            hist = HistogramWidget(x, y)
+            hist = HistogramWidget(x, y, xlabel="SNR", ylabel="counts")
 
             def snr_dragged(event=None):
                 snr_thresh = hist.hist_plot._vert_line.getPos()[0]
@@ -54,10 +54,10 @@ def calcium_curator(
             snr_dragged()
             hist.hist_plot.connect_line_dragged(snr_dragged)
 
-            viewer.window.add_dock_widget(hist)
+            viewer.window.add_dock_widget(hist, name="SNR histogram")
 
         # Add the cell labels
-        selected_shapes = viewer.add_shapes()
+        selected_shapes = viewer.add_shapes(name="selected_cell")
         rejected_mask = contour_manager.make_rejected_mask()
         bad_labels = viewer.add_labels(rejected_mask, visible=False)
 
@@ -69,8 +69,10 @@ def calcium_curator(
             spike_events = spikes[0] > 50
         else:
             spike_events = None
-        line_plot = LinePlot(x=t, y=f[0], events=spike_events)
-        viewer.window.add_dock_widget(line_plot)
+        line_plot = LinePlot(
+            x=t, y=f[0], xlabel="time", ylabel="fluorescence", events=spike_events
+        )
+        viewer.window.add_dock_widget(line_plot, name="Fluorescence trace")
 
         def update_line(event=None):
             current_frame = viewer.dims.point[0]

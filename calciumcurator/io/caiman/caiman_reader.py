@@ -1,3 +1,5 @@
+from typing import Union
+
 import numpy as np
 from napari.layers.utils.layer_utils import calc_data_range
 from skimage import measure
@@ -7,10 +9,14 @@ from ...images.masks import make_scalar_mask
 from ._vendored import load_dict_from_hdf5, load_memmap
 
 
-def make_caiman_contour_manager(img_components: np.ndarray) -> ContourManager:
+def make_caiman_contour_manager(
+    img_components: np.ndarray, good_indices: Union[list, np.ndarray]
+) -> ContourManager:
     contours = [measure.find_contours(comp, 40)[0] for comp in img_components]
+    initial_state = np.zeros((len(contours),), dtype=np.bool)
+    initial_state[good_indices] = True
     contour_manager = ContourManager(
-        contours, initial_state="good", im_shape=img_components[0, ...].shape
+        contours, initial_state=initial_state, im_shape=img_components[0, ...].shape
     )
 
     return contour_manager
@@ -55,8 +61,9 @@ def caiman_reader(
     img_components = img_components / img_components.max(axis=(1, 2))[:, None, None]
     img_components = img_components * 255
     estimates["img_components"] = img_components.astype(np.uint8)
-
-    contour_manager = make_caiman_contour_manager(estimates["img_components"])
+    contour_manager = make_caiman_contour_manager(
+        estimates["img_components"], good_indices=estimates["idx_components"]
+    )
 
     # calculate the SNR and make the mask
     snr = estimates["SNR_comp"]

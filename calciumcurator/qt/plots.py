@@ -1,3 +1,5 @@
+from typing import Optional
+
 from qtpy.QtWidgets import QWidget, QVBoxLayout
 import pyqtgraph as pg
 import numpy as np
@@ -5,24 +7,43 @@ import numpy as np
 
 class LinePlot(QWidget):
     def __init__(
-        self, x: np.ndarray, y: np.ndarray, events: np.ndarray = None, parent=None
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        events: np.ndarray = None,
+        parent=None,
     ):
         super(LinePlot, self).__init__(parent)
         self.vbox = QVBoxLayout()
         self._curves = []
 
-        self.add_plot(x, y)
+        self.add_plot(x, y, xlabel=xlabel, ylabel=ylabel)
         if events is not None:
             self.add_events(events, y)
         else:
             self._events_plot = None
         self.setLayout(self.vbox)
 
-    def add_plot(self, x, y, vert_line: bool = True):
+    def add_plot(
+        self,
+        x,
+        y,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        vert_line: bool = True,
+    ):
 
         new_plot = pg.plot()
         vline = pg.InfiniteLine(angle=90, movable=False)
         new_plot.addItem(vline)
+
+        # add axis labels
+        if xlabel is not None:
+            new_plot.setLabel("bottom", xlabel)
+        if ylabel is not None:
+            new_plot.setLabel("left", ylabel)
 
         self._plot = new_plot
         # self._curves.append(self._plot.plot(data))
@@ -64,13 +85,33 @@ class LinePlot(QWidget):
 
 
 class Histogram(LinePlot):
-    def __init__(self, x: np.ndarray, y: np.ndarray, parent=None):
-        super().__init__(x, y, events=None, parent=parent)
+    def __init__(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        parent=None,
+    ):
+        super().__init__(x, y, xlabel=xlabel, ylabel=ylabel, events=None, parent=parent)
 
-    def add_plot(self, x, y, vert_line: bool = True):
+    def add_plot(
+        self,
+        x,
+        y,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        vert_line: bool = True,
+    ):
         new_plot = pg.plot()
         vline = pg.InfiniteLine(angle=90, movable=True)
         new_plot.addItem(vline)
+
+        # add axis labels
+        if xlabel is not None:
+            new_plot.setLabel("bottom", xlabel)
+        if ylabel is not None:
+            new_plot.setLabel("left", ylabel)
 
         self._plot = new_plot
         # self._curves.append(self._plot.plot(data))

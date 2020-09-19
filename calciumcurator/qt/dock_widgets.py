@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 from qtpy.QtWidgets import (
     QWidget,
@@ -12,10 +14,22 @@ from .plots import Histogram
 
 
 class HistogramWidget(QWidget):
-    def __init__(self, x: np.ndarray, y: np.ndarray, parent=None):
+    def __init__(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
+        parent=None,
+    ):
         super(HistogramWidget, self).__init__(parent)
 
-        self.hist_plot = Histogram(x, y, parent=self)
+        # set the width of the histogram plot to match the napari layer control width
+        self.setMinimumWidth(240)
+        self.setMaximumWidth(240)
+
+        self.hist_plot = Histogram(x, y, xlabel=xlabel, ylabel=ylabel, parent=self)
+        self.hist_plot.setMaximumWidth(230)
 
         self.thresh_text = QLineEdit()
         self.text_layout = QHBoxLayout()
