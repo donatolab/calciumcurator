@@ -38,7 +38,9 @@ def load_dict_from_hdf5(filename: str) -> Dict:
         return recursively_load_dict_contents_from_group(h5file, "/")
 
 
-def recursively_load_dict_contents_from_group(h5file: h5py.File, path: str) -> Dict:
+def recursively_load_dict_contents_from_group(
+    h5file: h5py.File, path: str
+) -> Dict:
     """load dictionary from hdf5 object
     Args:
         h5file: hdf5 object
@@ -84,7 +86,9 @@ def recursively_load_dict_contents_from_group(h5file: h5py.File, path: str) -> D
                 indices = item[path + key + "/indices"]
                 indptr = item[path + key + "/indptr"]
                 shape = item[path + key + "/shape"]
-                ans[key] = sparse.csc_matrix((data[:], indices[:], indptr[:]), shape[:])
+                ans[key] = sparse.csc_matrix(
+                    (data[:], indices[:], indptr[:]), shape[:]
+                )
                 if key in ("W", "upscale_matrix"):
                     ans[key] = ans[key].tocsr()
             else:
@@ -125,7 +129,9 @@ def load_memmap(filename: str, mode: str = "r") -> Tuple[Any, Tuple, int]:
     # TODO: Eventually get the code to save these in a different dir
     file_to_load = filename
     filename = os.path.split(filename)[-1]
-    fpart = filename.split("_")[1:-1]  # The filename encodes the structure of the map
+    fpart = filename.split("_")[
+        1:-1
+    ]  # The filename encodes the structure of the map
     d1, d2, d3, T, order = (
         int(fpart[-9]),
         int(fpart[-7]),

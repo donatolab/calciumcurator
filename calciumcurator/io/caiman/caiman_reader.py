@@ -16,7 +16,9 @@ def make_caiman_contour_manager(
     initial_state = np.zeros((len(contours),), dtype=np.bool)
     initial_state[good_indices] = True
     contour_manager = ContourManager(
-        contours, initial_state=initial_state, im_shape=img_components[0, ...].shape
+        contours,
+        initial_state=initial_state,
+        im_shape=img_components[0, ...].shape,
     )
 
     return contour_manager
@@ -58,7 +60,9 @@ def caiman_reader(
         .reshape((estimates["dims"][0], estimates["dims"][1], -1), order="F")
         .transpose([2, 0, 1])
     )
-    img_components = img_components / img_components.max(axis=(1, 2))[:, None, None]
+    img_components = (
+        img_components / img_components.max(axis=(1, 2))[:, None, None]
+    )
     img_components = img_components * 255
     estimates["img_components"] = img_components.astype(np.uint8)
     contour_manager = make_caiman_contour_manager(
@@ -69,7 +73,8 @@ def caiman_reader(
     snr = estimates["SNR_comp"]
     im_shape = im_registered.shape
     contours = [
-        measure.find_contours(comp, 40)[0] for comp in estimates["img_components"]
+        measure.find_contours(comp, 40)[0]
+        for comp in estimates["img_components"]
     ]
     snr_mask = make_scalar_mask(
         contours, im_shape=(im_shape[-2], im_shape[-1]), values=snr

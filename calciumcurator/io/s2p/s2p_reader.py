@@ -32,7 +32,9 @@ def create_cell_mask(
     lam_normed
     """
     mask = ... if allow_overlap else ~stat["overlap"]
-    cell_mask = np.ravel_multi_index((stat["ypix"], stat["xpix"]), (n_rows, n_cols))
+    cell_mask = np.ravel_multi_index(
+        (stat["ypix"], stat["xpix"]), (n_rows, n_cols)
+    )
     cell_mask = cell_mask[mask]
     lam = stat["lam"][mask]
     lam_normed = lam / lam.sum() if lam.size > 0 else np.empty(0)
@@ -69,7 +71,10 @@ def create_cell_labels_ims(
 
     cell_masks = [
         create_cell_mask(
-            stat, n_rows=n_rows, n_cols=n_cols, allow_overlap=ops["allow_overlap"]
+            stat,
+            n_rows=n_rows,
+            n_cols=n_cols,
+            allow_overlap=ops["allow_overlap"],
         )[0]
         for stat in stat_all
     ]
@@ -94,7 +99,10 @@ def create_cell_mask_indices(stat_all: list, ops: dict):
 
     cell_masks = [
         create_cell_mask(
-            stat, n_rows=n_rows, n_cols=n_cols, allow_overlap=ops["allow_overlap"]
+            stat,
+            n_rows=n_rows,
+            n_cols=n_cols,
+            allow_overlap=ops["allow_overlap"],
         )[0]
         for stat in stat_all
     ]
@@ -127,7 +135,10 @@ def s2p_reader(
             t_slice = array_location[0][0]
             registered_array = np.roll(
                 array,
-                (-np.int16(offsets[t_slice][0]), -np.int16(offsets[t_slice][1])),
+                (
+                    -np.int16(offsets[t_slice][0]),
+                    -np.int16(offsets[t_slice][1]),
+                ),
                 axis=(1, 2),
             )
 

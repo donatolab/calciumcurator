@@ -11,7 +11,9 @@ READER_FUNCS = {"s2p": s2p_reader, "caiman": caiman_reader}
 def parse_args():
     parser = argparse.ArgumentParser(description="CalciumCurator")
     parser.add_argument("--pipeline", default="", type=str, help="options")
-    parser.add_argument("--pipeline-params", default="", type=str, help="options")
+    parser.add_argument(
+        "--pipeline-params", default="", type=str, help="options"
+    )
     parser.add_argument("--image", default="", type=str, help="options")
     parser.add_argument("--snr", default="", type=str, help="options")
     parser.add_argument("--trace", default="", type=str, help="options")
@@ -69,7 +71,12 @@ def main():
         spikes,
         is_cell,
     ) = reader_func(
-        pipeline_params, image_path, snr_path, trace_path, cell_path, spikes_path
+        pipeline_params,
+        image_path,
+        snr_path,
+        trace_path,
+        cell_path,
+        spikes_path,
     )
 
     calcium_curator(

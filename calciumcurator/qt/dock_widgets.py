@@ -28,7 +28,9 @@ class HistogramWidget(QWidget):
         self.setMinimumWidth(240)
         self.setMaximumWidth(240)
 
-        self.hist_plot = Histogram(x, y, xlabel=xlabel, ylabel=ylabel, parent=self)
+        self.hist_plot = Histogram(
+            x, y, xlabel=xlabel, ylabel=ylabel, parent=self
+        )
         self.hist_plot.setMaximumWidth(230)
 
         self.thresh_text = QLineEdit()
