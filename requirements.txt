@@ -1,0 +1,5 @@
+h5py
+napari[all]
+numpy
+pyqtgraph
+scikit-image
