@@ -93,7 +93,9 @@ class Histogram(LinePlot):
         ylabel: Optional[str] = None,
         parent=None,
     ):
-        super().__init__(x, y, xlabel=xlabel, ylabel=ylabel, events=None, parent=parent)
+        super().__init__(
+            x, y, xlabel=xlabel, ylabel=ylabel, events=None, parent=parent
+        )
 
     def add_plot(
         self,

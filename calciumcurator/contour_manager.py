@@ -57,7 +57,9 @@ class ContourManager:
         return self._selected_contours
 
     @selected_contours.setter
-    def selected_contours(self, selected_contours: Union[list, np.ndarray, set]):
+    def selected_contours(
+        self, selected_contours: Union[list, np.ndarray, set]
+    ):
         self._selected_contours = set(selected_contours)
 
     def make_accepted_mask(self):
@@ -65,7 +67,8 @@ class ContourManager:
         labels = self._contour_labels[self.good_contour]
         for label, cont in zip(labels, self.accepted_contours):
             accepted_contours_image[
-                np.round(cont[:, 0]).astype("int"), np.round(cont[:, 1]).astype("int")
+                np.round(cont[:, 0]).astype("int"),
+                np.round(cont[:, 1]).astype("int"),
             ] = label
 
         return accepted_contours_image
@@ -75,7 +78,8 @@ class ContourManager:
         labels = self._contour_labels[np.logical_not(self.good_contour)]
         for label, cont in zip(labels, self.rejected_contours):
             rejected_contours_image[
-                np.round(cont[:, 0]).astype("int"), np.round(cont[:, 1]).astype("int")
+                np.round(cont[:, 0]).astype("int"),
+                np.round(cont[:, 1]).astype("int"),
             ] = label
 
         return rejected_contours_image

@@ -38,16 +38,22 @@ def calcium_curator(
                 snr_thresh = hist.hist_plot._vert_line.getPos()[0]
                 if np.sum(contour_manager.good_contour) > 0:
                     good_snr_indices = np.squeeze(
-                        np.argwhere(snr[contour_manager.good_contour] > snr_thresh)
+                        np.argwhere(
+                            snr[contour_manager.good_contour] > snr_thresh
+                        )
                     )
                     if good_snr_indices.ndim != 0:
                         good_masks = [
                             contour_manager.accepted_contours[i]
                             for i in good_snr_indices
                         ]
-                        good_snr = snr[contour_manager.good_contour][good_snr_indices]
+                        good_snr = snr[contour_manager.good_contour][
+                            good_snr_indices
+                        ]
                         im_shape = (img.shape[-2], img.shape[-1])
-                        new_snr_mask = make_scalar_mask(good_masks, im_shape, good_snr)
+                        new_snr_mask = make_scalar_mask(
+                            good_masks, im_shape, good_snr
+                        )
                         snr_image.data = new_snr_mask
 
             # update the SNR image and connect the event
@@ -70,7 +76,11 @@ def calcium_curator(
         else:
             spike_events = None
         line_plot = LinePlot(
-            x=t, y=f[0], xlabel="time", ylabel="fluorescence", events=spike_events
+            x=t,
+            y=f[0],
+            xlabel="time",
+            ylabel="fluorescence",
+            events=spike_events,
         )
         viewer.window.add_dock_widget(line_plot, name="Fluorescence trace")
 
@@ -97,7 +107,9 @@ def calcium_curator(
 
                 # clear any current selections
                 contour_manager.selected_contours = {}
-                selected_shapes.selected_data = np.arange(len(selected_shapes.data))
+                selected_shapes.selected_data = np.arange(
+                    len(selected_shapes.data)
+                )
                 selected_shapes.remove_selected()
 
                 if selected_contour != -1:
@@ -139,7 +151,9 @@ def calcium_curator(
                     update_selection(selected_index)
                 elif (snr_mask is not None) and (snr is not None):
                     if selected_layers[0] is snr_image:
-                        visual = viewer.window.qt_viewer.layer_to_visual[good_labels]
+                        visual = viewer.window.qt_viewer.layer_to_visual[
+                            good_labels
+                        ]
                         pos = list(event.pos)
                         good_labels.position = visual._transform_position(pos)
                         selected_index = good_labels._get_value()
@@ -155,7 +169,9 @@ def calcium_curator(
             selected_contours = list(contour_manager.selected_contours)
             if len(selected_contours) > 0:
                 good_contour = contour_manager.good_contour
-                good_contour[selected_contours] = ~good_contour[selected_contours]
+                good_contour[selected_contours] = ~good_contour[
+                    selected_contours
+                ]
                 contour_manager.good_contour = good_contour
 
                 good_contours_image = contour_manager.make_accepted_mask()
@@ -177,7 +193,10 @@ def calcium_curator(
             accepted_cells[accepted_cells_indices] = 1
             if cells is not None:
                 good_cells = np.hstack(
-                    (np.expand_dims(accepted_cells, 1), np.expand_dims(cells[:, 1], 1))
+                    (
+                        np.expand_dims(accepted_cells, 1),
+                        np.expand_dims(cells[:, 1], 1),
+                    )
                 )
             else:
                 good_cells = accepted_cells
