@@ -1,7 +1,9 @@
 import argparse
 import os
 
-from .calcium_curator import calcium_curator
+import napari
+
+from .calcium_curator import CalciumCurator
 from .io.caiman.caiman_reader import caiman_reader
 from .io.caiman._vendored import load_dict_from_hdf5
 
@@ -46,14 +48,15 @@ def view_caiman():
         is_cell,
     ) = caiman_reader(results_file, image_path)
 
-    calcium_curator(
-        img=im_registered,
-        data_range=data_range,
-        contour_manager=contour_manager,
-        f=f_traces,
-        snr=snr,
-        snr_mask=snr_mask,
-        spikes=spikes,
-        output=output_dir,
-        cells=is_cell,
-    )
+    with napari.gui_qt():
+        CalciumCurator(
+            img=im_registered,
+            data_range=data_range,
+            contour_manager=contour_manager,
+            f=f_traces,
+            snr=snr,
+            snr_mask=snr_mask,
+            spikes=spikes,
+            output=output_dir,
+            cells=is_cell,
+        )
