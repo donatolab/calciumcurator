@@ -31,7 +31,7 @@ def load_movie(filename: str):
     """
     # filename = os.path.basename(filename)
     Yr, dims, T = load_memmap(filename)
-    images = np.reshape(Yr.T, [T] + list(dims), order="F")
+    images = np.reshape(Yr.T, [T] + list(dims), order="C")
 
     return images
 
@@ -54,6 +54,8 @@ def caiman_reader(
 
     # make the contours
     estimates = cnm_obj["estimates"]
+    if estimates["dims"] is None:
+        estimates["dims"] = im_registered.shape[1::]
     img_components = (
         estimates["A"]
         .toarray()

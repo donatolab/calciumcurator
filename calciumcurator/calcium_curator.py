@@ -30,7 +30,10 @@ def calcium_curator(
         # add the SNR widgets
         if (snr_mask is not None) and (snr is not None):
             snr_image = viewer.add_image(snr_mask, visible=False)
-            bins = np.linspace(np.int(snr.min()), np.int(snr.max()), 20)
+            snr_clean = np.nan_to_num(snr, copy=True, neginf=0, nan=0)
+            bins = np.linspace(
+                np.rint(snr_clean.min()), np.rint(snr_clean.max()), 20
+            )
             y, x = np.histogram(snr, bins=bins)
             hist = HistogramWidget(x, y, xlabel="SNR", ylabel="counts")
 
