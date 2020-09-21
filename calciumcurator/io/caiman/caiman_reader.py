@@ -31,7 +31,7 @@ def load_movie(filename: str):
     """
     # filename = os.path.basename(filename)
     Yr, dims, T = load_memmap(filename)
-    images = np.reshape(Yr.T, [T] + list(dims), order="F")
+    images = np.reshape(Yr.T, [T] + list(dims), order="C")
 
     return images
 
