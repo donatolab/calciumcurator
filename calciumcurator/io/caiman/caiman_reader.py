@@ -54,6 +54,8 @@ def caiman_reader(
 
     # make the contours
     estimates = cnm_obj["estimates"]
+    if estimates["dims"] is None:
+        estimates["dims"] = im_registered.shape[1::]
     img_components = (
         estimates["A"]
         .toarray()
