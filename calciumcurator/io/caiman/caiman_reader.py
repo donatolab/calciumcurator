@@ -1,7 +1,7 @@
 from typing import Union
 
 import numpy as np
-from napari.layers.utils.layer_utils import calc_data_range
+from ..utils.data_range import calc_data_range
 from skimage import measure
 
 from ...contour_manager import ContourManager
