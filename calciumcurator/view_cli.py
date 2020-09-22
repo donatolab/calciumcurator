@@ -26,9 +26,17 @@ def view_caiman():
     cnm_obj = load_dict_from_hdf5(results_file)
 
     if image_path == "":
-        im_name = os.path.basename(cnm_obj["mmap_file"])
+        im_name_base = os.path.basename(
+            os.path.splitext(cnm_obj['mmap_file'])[0]
+        )
         results_dir = os.path.dirname(results_file)
-        image_path = os.path.join(results_dir, im_name)
+        image_path_base = os.path.join(results_dir, im_name_base)
+        # first check if there's a motion corrected hdf5 file
+        # if not, try the caiman mmap file
+        if os.path.isfile(image_path_base + '_mcorr.hdf5'):
+            image_path = image_path_base + '_mcorr.hdf5'
+        else:
+            image_path = image_path_base + '.mmap'
         if not os.path.isfile(image_path):
             raise FileNotFoundError(
                 "Image file not found in results directory.\n"
