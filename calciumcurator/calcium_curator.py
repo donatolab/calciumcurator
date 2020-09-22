@@ -34,38 +34,6 @@ class CalciumCurator:
                 ylabel='counts',
                 histogram_name='SNR histogram',
             )
-            # snr_image = viewer.add_image(snr_mask, visible=False)
-            # bins = np.linspace(np.int(snr.min()), np.int(snr.max()), 20)
-            # y, x = np.histogram(snr, bins=bins)
-            # hist = HistogramWidget(x, y, xlabel="SNR", ylabel="counts")
-
-            # def snr_dragged(event=None):
-            #     snr_thresh = hist.hist_plot._vert_line.getPos()[0]
-            #     if np.sum(contour_manager.good_contour) > 0:
-            #         good_snr_indices = np.squeeze(
-            #             np.argwhere(
-            #                 snr[contour_manager.good_contour] > snr_thresh
-            #             )
-            #         )
-            #         if good_snr_indices.ndim != 0:
-            #             good_masks = [
-            #                 contour_manager.accepted_contours[i]
-            #                 for i in good_snr_indices
-            #             ]
-            #             good_snr = snr[contour_manager.good_contour][
-            #                 good_snr_indices
-            #             ]
-            #             im_shape = (img.shape[-2], img.shape[-1])
-            #             new_snr_mask = make_scalar_mask(
-            #                 good_masks, im_shape, good_snr
-            #             )
-            #             snr_image.data = new_snr_mask
-            #
-            # # update the SNR image and connect the event
-            # snr_dragged()
-            # hist.hist_plot.connect_line_dragged(snr_dragged)
-            #
-            # viewer.window.add_dock_widget(hist, name="SNR histogram")
 
         # Add the cell labels
         selected_shapes = viewer.add_shapes(name="selected_cell")
