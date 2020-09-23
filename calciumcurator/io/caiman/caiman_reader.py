@@ -1,11 +1,14 @@
 from typing import Union
+import os
 
+import dask.array as da
+import h5py
 import numpy as np
-from napari.layers.utils.layer_utils import calc_data_range
 from skimage import measure
 
 from ...contour_manager import ContourManager
 from ...images.masks import make_scalar_mask
+from ..utils.data_range import calc_data_range
 from ._vendored import load_dict_from_hdf5, load_memmap
 
 
@@ -24,14 +27,24 @@ def make_caiman_contour_manager(
     return contour_manager
 
 
-def load_movie(filename: str):
+def load_movie(filename: str, dataset_name: str = 'mov'):
     """Adapted from caiman
 
 
     """
-    # filename = os.path.basename(filename)
-    Yr, dims, T = load_memmap(filename)
-    images = np.reshape(Yr.T, [T] + list(dims), order="F")
+    file_ext = os.path.splitext(filename)[-1]
+
+    if file_ext in ['.hdf5', '.hdf']:
+        image_path = filename
+        f = h5py.File(image_path, "r")
+        im = f[dataset_name]
+        im_shape = im.shape
+        images = da.from_array(im, chunks=(1, im_shape[-2], im_shape[-1]))
+    elif file_ext == '.mmap':
+        Yr, dims, T = load_memmap(filename)
+        images = np.reshape(Yr.T, [T] + list(dims), order="C")
+    else:
+        raise IOError(f'{file_ext} files cannot be read')
 
     return images
 
@@ -54,6 +67,8 @@ def caiman_reader(
 
     # make the contours
     estimates = cnm_obj["estimates"]
+    if estimates["dims"] is None:
+        estimates["dims"] = im_registered.shape[1::]
     img_components = (
         estimates["A"]
         .toarray()
