@@ -91,7 +91,7 @@ def calcium_curator(
             current_frame = viewer.dims.point[0]
             line_plot.update_vline(current_frame)
 
-        viewer.dims.events.axis.connect(update_line)
+        viewer.dims.events.current_step.connect(update_line)
 
         def update_plot(cell_indices):
             for i in cell_indices:
