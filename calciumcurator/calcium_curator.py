@@ -55,14 +55,6 @@ class CalciumCurator:
             ylabel="fluorescence",
             event_indices=spike_events,
         )
-        # line_plot = LinePlot(
-        #     x=t,
-        #     y=f[0],
-        #     xlabel="time",
-        #     ylabel="fluorescence",
-        #     events=spike_events,
-        # )
-        # viewer.window.add_dock_widget(line_plot, name="Fluorescence trace")
 
         def update_line(event=None):
             current_frame = viewer.dims.point[0]
