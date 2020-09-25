@@ -19,10 +19,9 @@ class ThresholdImage:
         The label for the horizontal axis of the histogram.
     ylabel : str
         The label for the horizontal axis of the histogram.
-    histogram_name : str
+    name : str
         The name for the histogram widget. This is passed as the name to viewer.add_dock_widget()
         and will the be the name of the histogram widget in the Window menu.
-        The default value is 'histogram'
         The default value is 'histogram'
     """
 
@@ -33,7 +32,7 @@ class ThresholdImage:
         nbins: int = 20,
         xlabel: str = '',
         ylabel: str = '',
-        histogram_name: str = 'histogram',
+        name: str = 'histogram',
     ):
         self.image = image
         self.image_layer = viewer.add_image(image, visible=False)
@@ -51,12 +50,9 @@ class ThresholdImage:
         self.histogram_widget.threshold_changed_callbacks.append(
             self.on_snr_changed
         )
-        print(self.histogram_widget.threshold_changed_callbacks)
 
         # add the histogram dock widget to the viewer
-        viewer.window.add_dock_widget(
-            self.histogram_widget, name=histogram_name
-        )
+        viewer.window.add_dock_widget(self.histogram_widget, name=name)
 
     @property
     def threshold(self) -> float:

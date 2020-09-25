@@ -4,8 +4,7 @@ import napari
 import numpy as np
 
 from .contour_manager import ContourManager
-from .extensions.threshold import ThresholdImage
-from .qt.plots import LinePlot
+from .extensions import LinePlot, ThresholdImage
 
 
 class CalciumCurator:
@@ -32,7 +31,7 @@ class CalciumCurator:
                 viewer=viewer,
                 xlabel='SNR',
                 ylabel='counts',
-                histogram_name='SNR histogram',
+                name='SNR histogram',
             )
 
         # Add the cell labels
@@ -49,30 +48,32 @@ class CalciumCurator:
         else:
             spike_events = None
         line_plot = LinePlot(
+            viewer=viewer,
             x=t,
-            y=f[0],
+            y=f,
             xlabel="time",
             ylabel="fluorescence",
-            events=spike_events,
+            event_indices=spike_events,
         )
-        viewer.window.add_dock_widget(line_plot, name="Fluorescence trace")
+        # line_plot = LinePlot(
+        #     x=t,
+        #     y=f[0],
+        #     xlabel="time",
+        #     ylabel="fluorescence",
+        #     events=spike_events,
+        # )
+        # viewer.window.add_dock_widget(line_plot, name="Fluorescence trace")
 
         def update_line(event=None):
             current_frame = viewer.dims.point[0]
-            line_plot.update_vline(current_frame)
+            line_plot.current_x = current_frame
 
         viewer.dims.events.current_step.connect(update_line)
 
         def update_plot(cell_indices):
-            for i in cell_indices:
-                data = f[i]
-                if spikes is not None:
-                    spike_events = spikes[i] > 25
-                else:
-                    spike_events = None
-                line_plot.plot(data, spike_events)
-                current_frame = viewer.dims.point[0]
-                line_plot.update_vline(current_frame)
+            line_plot.displayed_traces = cell_indices
+            current_frame = viewer.dims.point[0]
+            line_plot.current_x = current_frame
 
         def update_selection(selected_index):
             if selected_index is not None:
@@ -84,6 +85,7 @@ class CalciumCurator:
                     len(selected_shapes.data)
                 )
                 selected_shapes.remove_selected()
+                line_plot.displayed_traces = {}
 
                 if selected_contour != -1:
                     contour_manager.selected_contours = {selected_contour}

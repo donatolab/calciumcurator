@@ -5,17 +5,17 @@ import pyqtgraph as pg
 import numpy as np
 
 
-class LinePlot(QWidget):
+class LinePlotWidget(QWidget):
     def __init__(
         self,
-        x: np.ndarray,
-        y: np.ndarray,
+        x: Optional[np.ndarray] = None,
+        y: Optional[np.ndarray] = None,
         xlabel: Optional[str] = None,
         ylabel: Optional[str] = None,
         events: np.ndarray = None,
         parent=None,
     ):
-        super(LinePlot, self).__init__(parent)
+        super(LinePlotWidget, self).__init__(parent)
         self.vbox = QVBoxLayout()
         self._curves = []
 
@@ -38,6 +38,7 @@ class LinePlot(QWidget):
         new_plot = pg.plot()
         vline = pg.InfiniteLine(angle=90, movable=False)
         new_plot.addItem(vline)
+        self._vert_line = vline
 
         # add axis labels
         if xlabel is not None:
@@ -47,13 +48,10 @@ class LinePlot(QWidget):
 
         self._plot = new_plot
         # self._curves.append(self._plot.plot(data))
-        curve_item = pg.PlotCurveItem(x, y)
-        self._plot.addItem(curve_item)
-
-        self._curves.append(curve_item)
-
-        self._vert_line = vline
-
+        if x is not None and y is not None:
+            curve_item = pg.PlotCurveItem(x, y)
+            self._plot.addItem(curve_item)
+            self._curves.append(curve_item)
         self.vbox.addWidget(new_plot)
 
     def add_events(self, events, f_trace):
@@ -69,13 +67,13 @@ class LinePlot(QWidget):
     def update_vline(self, new_pos):
         self._vert_line.setValue(new_pos)
 
-    def plot(self, data, events=None):
+    def plot(self, x, y, events=None):
         self.clear()
-        self._plot.plot(data)
+        self._plot.plot(x, y)
 
         if events is not None:
             if len(events) > 0 and self._events_plot is not None:
-                self.add_events(events, data)
+                self.add_events(events, y)
 
     def clear(self):
         self._plot.clear()
@@ -84,7 +82,7 @@ class LinePlot(QWidget):
         self._vert_line = vline
 
 
-class Histogram(LinePlot):
+class Histogram(LinePlotWidget):
     def __init__(
         self,
         x: np.ndarray,
