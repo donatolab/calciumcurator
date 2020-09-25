@@ -1,0 +1,2 @@
+The test data is from the caiman CNFM-E demo pipeline:
+https://github.com/flatironinstitute/CaImAn/blob/master/demos/general/demo_pipeline_cnmfE.py
