@@ -34,7 +34,6 @@ class LinePlot:
         The name for the plot widget. This is passed as the name to viewer.add_dock_widget()
         and will the be the name of the histogram widget in the Window menu.
         The default value is 'histogram'
-        The default value is 'histogram'
     """
 
     def __init__(

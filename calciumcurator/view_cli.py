@@ -49,7 +49,8 @@ def view_caiman():
     (
         im_registered,
         data_range,
-        contour_manager,
+        cell_masks,
+        initial_cell_masks_state,
         f_traces,
         snr,
         snr_mask,
@@ -61,7 +62,8 @@ def view_caiman():
         CalciumCurator(
             img=im_registered,
             data_range=data_range,
-            contour_manager=contour_manager,
+            cell_masks=cell_masks,
+            initial_cell_masks_state=initial_cell_masks_state,
             f=f_traces,
             snr=snr,
             snr_mask=snr_mask,

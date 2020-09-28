@@ -1,10 +1,9 @@
-from typing import Optional
+from typing import Optional, Union
 
 import napari
 import numpy as np
 
-from .contour_manager import ContourManager
-from .extensions import LinePlot, ThresholdImage
+from .extensions import CellMask, LinePlot, ThresholdImage
 
 
 class CalciumCurator:
@@ -12,7 +11,8 @@ class CalciumCurator:
         self,
         img: np.ndarray,
         data_range,
-        contour_manager: ContourManager,
+        cell_masks: np.ndarray,
+        initial_cell_masks_state: Union[str, np.ndarray] = 'good',
         f: Optional[np.ndarray] = None,
         spikes: Optional[np.ndarray] = None,
         snr: Optional[np.ndarray] = None,
@@ -34,13 +34,19 @@ class CalciumCurator:
                 name='SNR histogram',
             )
 
-        # Add the cell labels
-        selected_shapes = viewer.add_shapes(name="selected_cell")
-        rejected_mask = contour_manager.make_rejected_mask()
-        bad_labels = viewer.add_labels(rejected_mask, visible=False)
-
-        accepted_mask = contour_manager.make_accepted_mask()
-        good_labels = viewer.add_labels(accepted_mask)
+        # # Add the cell labels
+        # selected_shapes = viewer.add_shapes(name="selected_cell")
+        # rejected_mask = contour_manager.make_rejected_mask()
+        # bad_labels = viewer.add_labels(rejected_mask, visible=False)
+        #
+        # accepted_mask = contour_manager.make_accepted_mask()
+        # good_labels = viewer.add_labels(accepted_mask)
+        cell_masks = CellMask(
+            viewer=viewer,
+            im_shape=img.shape[-2::],
+            cell_masks=cell_masks,
+            initial_state=initial_cell_masks_state,
+        )
 
         t = np.arange(len(f[0]))
         if spikes is not None:
@@ -67,45 +73,13 @@ class CalciumCurator:
             current_frame = viewer.dims.point[0]
             line_plot.current_x = current_frame
 
-        def update_selection(selected_index):
-            if selected_index is not None:
-                selected_contour = selected_index - 1
-
-                # clear any current selections
-                contour_manager.selected_contours = {}
-                selected_shapes.selected_data = np.arange(
-                    len(selected_shapes.data)
-                )
-                selected_shapes.remove_selected()
+        def update_selection(selected_indices: Optional[np.ndarray] = None):
+            if selected_indices is not None:
+                selected_masks = selected_indices - 1
                 line_plot.displayed_traces = {}
-
-                if selected_contour != -1:
-                    contour_manager.selected_contours = {selected_contour}
-                    selection_bbox = []
-                    contour = contour_manager.contours[selected_contour]
-                    min_r = np.min(contour[:, 0])
-                    min_c = np.min(contour[:, 1])
-                    max_r = np.max(contour[:, 0])
-                    max_c = np.max(contour[:, 1])
-
-                    selection_bbox.append(
-                        np.array(
-                            [
-                                [min_r, min_c],
-                                [min_r, max_c],
-                                [max_r, max_c],
-                                [max_r, min_c],
-                            ]
-                        )
-                    )
-                    selected_shapes.add(
-                        selection_bbox,
-                        shape_type="rectangle",
-                        face_color="transparent",
-                        edge_color="green",
-                    )
-                    update_plot(cell_indices=[selected_contour])
-
+                cell_masks.selected_mask = selected_masks
+                if np.all(selected_masks >= 0):
+                    update_plot(cell_indices=selected_masks)
             else:
                 line_plot.clear()
 
@@ -115,43 +89,31 @@ class CalciumCurator:
 
                 if isinstance(selected_layers[0], napari.layers.Labels):
                     selected_index = selected_layers[0]._value
-                    update_selection(selected_index)
+                    update_selection(np.array([selected_index], dtype=np.int))
                 elif (snr_mask is not None) and (snr is not None):
                     if selected_layers[0] is snr_extension.image_layer:
                         visual = viewer.window.qt_viewer.layer_to_visual[
-                            good_labels
+                            cell_masks.accepted_labels
                         ]
                         pos = list(event.pos)
-                        good_labels.position = visual._transform_position(pos)
-                        selected_index = good_labels._get_value()
+                        cell_masks.accepted_labels.position = visual._transform_position(
+                            pos
+                        )
+                        selected_index = (
+                            cell_masks.accepted_labels._get_value()
+                        )
 
                         if selected_index is not None:
-                            update_selection(selected_index)
+                            update_selection(np.array([selected_index]))
             yield
 
         viewer.mouse_drag_callbacks.append(select_on_click)
-
-        @viewer.bind_key("t")
-        def toggle_selected_contour(viewer):
-            selected_contours = list(contour_manager.selected_contours)
-            if len(selected_contours) > 0:
-                good_contour = contour_manager.good_contour
-                good_contour[selected_contours] = ~good_contour[
-                    selected_contours
-                ]
-                contour_manager.good_contour = good_contour
-
-                good_contours_image = contour_manager.make_accepted_mask()
-                bad_contours_image = contour_manager.make_rejected_mask()
-
-                good_labels.data = good_contours_image
-                bad_labels.data = bad_contours_image
 
         @viewer.bind_key("q")
         def save_cells(viewer):
             snr_thresh = snr_extension.threshold
             accepted_cells_indices = np.argwhere(
-                snr[contour_manager.good_contour] > snr_thresh
+                snr[cell_masks.masks.good_contour] > snr_thresh
             )
             accepted_cells = np.zeros((f.shape[0],))
             accepted_cells[accepted_cells_indices] = 1
