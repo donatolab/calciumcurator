@@ -50,6 +50,8 @@ class HistogramWidget(QWidget):
         self.grid_layout.setColumnStretch(1, 1)
         self.setLayout(self.grid_layout)
 
+        self.threshold_changed_callbacks = []
+
         self._on_hist_thresh_change()
 
         # connect events
@@ -59,6 +61,9 @@ class HistogramWidget(QWidget):
     def _on_hist_thresh_change(self):
         hist_thresh_value = self.hist_plot._vert_line.getPos()[0]
         self.thresh_text.setText(f"{hist_thresh_value:.2f}")
+
+        for func in self.threshold_changed_callbacks:
+            func()
 
     def _on_thresh_text_change(self):
         hist_thresh_value = float(self.thresh_text.text())

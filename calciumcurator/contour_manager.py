@@ -6,8 +6,8 @@ import numpy as np
 class ContourManager:
     def __init__(
         self,
-        contours: list,
         im_shape: tuple,
+        contours: list = [],
         initial_state: Union[str, np.ndarray] = "good",
     ):
         self._contours = contours
