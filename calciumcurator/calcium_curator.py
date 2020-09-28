@@ -4,6 +4,7 @@ import napari
 import numpy as np
 
 from .extensions import CellMask, LinePlot, ThresholdImage
+from .qt.mode_controls import ModeControls
 
 
 class CalciumCurator:
@@ -128,6 +129,17 @@ class CalciumCurator:
                 good_cells = accepted_cells
             np.save(output, good_cells)
 
+        self.mode_controls = ModeControls()
+        self.mode_controls.manual_mode_button.clicked.connect(
+            self._on_manual_mode_clicked
+        )
+        self.mode_controls.snr_mode_button.clicked.connect(
+            self._on_snr_mode_clicked
+        )
+        self.viewer.window.add_dock_widget(
+            self.mode_controls, name='mode', area='right'
+        )
+
         self._dataset_loaded = True
         self.mode = 'manual'
         self.viewer.show()
@@ -152,6 +164,9 @@ class CalciumCurator:
             self.snr_extension.image_layer.selected = False
             self.movie.selected = False
 
+            # update the UI
+            self.mode_controls.manual_mode_button.setChecked(True)
+
         elif mode == 'snr_threshold':
             # set visibility
             self.cell_masks.accepted_labels.visible = False
@@ -165,6 +180,9 @@ class CalciumCurator:
             self.snr_extension.image_layer.selected = True
             self.movie.selected = False
 
+            # update the UI
+            self.mode_controls.snr_mode_button.setChecked(True)
+
         else:
             raise ValueError(f'{mode} is not a recognized mode')
 
@@ -173,3 +191,9 @@ class CalciumCurator:
     @property
     def dataset_loaded(self) -> bool:
         return self._dataset_loaded
+
+    def _on_manual_mode_clicked(self):
+        self.mode = 'manual'
+
+    def _on_snr_mode_clicked(self):
+        self.mode = 'snr_threshold'
