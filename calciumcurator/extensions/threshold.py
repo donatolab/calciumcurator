@@ -32,10 +32,13 @@ class ThresholdImage:
         nbins: int = 20,
         xlabel: str = '',
         ylabel: str = '',
+        image_layer_name: str = 'image',
         name: str = 'histogram',
     ):
         self.image = image
-        self.image_layer = viewer.add_image(image, visible=False)
+        self.image_layer = viewer.add_image(
+            image, name=image_layer_name, visible=False
+        )
 
         # create the histogram
         self.nbins = nbins

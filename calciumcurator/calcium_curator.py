@@ -20,29 +20,29 @@ class CalciumCurator:
         cells: Optional[np.ndarray] = None,
         output: str = "iscell_curated.npy",
     ):
-        viewer = napari.view_image(
-            img, multiscale=False, contrast_limits=data_range, visible=True
+        self.viewer = napari.view_image(
+            img,
+            multiscale=False,
+            contrast_limits=data_range,
+            visible=True,
+            name='movie',
         )
+        self.movie = self.viewer.layers['movie']
 
         # add the SNR widgets
         if (snr_mask is not None) and (snr is not None):
-            snr_extension = ThresholdImage(
+            self.snr_extension = ThresholdImage(
                 image=snr_mask,
-                viewer=viewer,
+                viewer=self.viewer,
                 xlabel='SNR',
                 ylabel='counts',
+                image_layer_name='SNR mask',
                 name='SNR histogram',
             )
 
         # # Add the cell labels
-        # selected_shapes = viewer.add_shapes(name="selected_cell")
-        # rejected_mask = contour_manager.make_rejected_mask()
-        # bad_labels = viewer.add_labels(rejected_mask, visible=False)
-        #
-        # accepted_mask = contour_manager.make_accepted_mask()
-        # good_labels = viewer.add_labels(accepted_mask)
-        cell_masks = CellMask(
-            viewer=viewer,
+        self.cell_masks = CellMask(
+            viewer=self.viewer,
             im_shape=img.shape[-2::],
             cell_masks=cell_masks,
             initial_state=initial_cell_masks_state,
@@ -53,8 +53,8 @@ class CalciumCurator:
             spike_events = spikes[0] > 50
         else:
             spike_events = None
-        line_plot = LinePlot(
-            viewer=viewer,
+        self.line_plot = LinePlot(
+            viewer=self.viewer,
             x=t,
             y=f,
             xlabel="time",
@@ -63,25 +63,25 @@ class CalciumCurator:
         )
 
         def update_line(event=None):
-            current_frame = viewer.dims.point[0]
-            line_plot.current_x = current_frame
+            current_frame = self.viewer.dims.point[0]
+            self.line_plot.current_x = current_frame
 
-        viewer.dims.events.current_step.connect(update_line)
+        self.viewer.dims.events.current_step.connect(update_line)
 
         def update_plot(cell_indices):
-            line_plot.displayed_traces = cell_indices
-            current_frame = viewer.dims.point[0]
-            line_plot.current_x = current_frame
+            self.line_plot.displayed_traces = cell_indices
+            current_frame = self.viewer.dims.point[0]
+            self.line_plot.current_x = current_frame
 
         def update_selection(selected_indices: Optional[np.ndarray] = None):
             if selected_indices is not None:
                 selected_masks = selected_indices - 1
-                line_plot.displayed_traces = {}
+                self.line_plot.displayed_traces = {}
                 cell_masks.selected_mask = selected_masks
                 if np.all(selected_masks >= 0):
                     update_plot(cell_indices=selected_masks)
             else:
-                line_plot.clear()
+                self.line_plot.clear()
 
         def select_on_click(viewer, event):
             selected_layers = viewer.layers.selected
@@ -91,7 +91,7 @@ class CalciumCurator:
                     selected_index = selected_layers[0]._value
                     update_selection(np.array([selected_index], dtype=np.int))
                 elif (snr_mask is not None) and (snr is not None):
-                    if selected_layers[0] is snr_extension.image_layer:
+                    if selected_layers[0] is self.snr_extension.image_layer:
                         visual = viewer.window.qt_viewer.layer_to_visual[
                             cell_masks.accepted_labels
                         ]
@@ -107,11 +107,11 @@ class CalciumCurator:
                             update_selection(np.array([selected_index]))
             yield
 
-        viewer.mouse_drag_callbacks.append(select_on_click)
+        self.viewer.mouse_drag_callbacks.append(select_on_click)
 
-        @viewer.bind_key("q")
+        @self.viewer.bind_key("q")
         def save_cells(viewer):
-            snr_thresh = snr_extension.threshold
+            snr_thresh = self.snr_extension.threshold
             accepted_cells_indices = np.argwhere(
                 snr[cell_masks.masks.good_contour] > snr_thresh
             )
@@ -128,4 +128,48 @@ class CalciumCurator:
                 good_cells = accepted_cells
             np.save(output, good_cells)
 
-        viewer.show()
+        self._dataset_loaded = True
+        self.mode = 'manual'
+        self.viewer.show()
+
+    @property
+    def mode(self) -> str:
+        return self._mode
+
+    @mode.setter
+    def mode(self, mode: str):
+
+        if mode == 'manual':
+            # set visibility
+            self.cell_masks.accepted_labels.visible = True
+            self.cell_masks.rejected_labels.visible = False
+            self.snr_extension.image_layer.visible = False
+            self.movie.visible = True
+
+            # select layer
+            self.cell_masks.accepted_labels.selected = True
+            self.cell_masks.rejected_labels.selected = False
+            self.snr_extension.image_layer.selected = False
+            self.movie.selected = False
+
+        elif mode == 'snr_threshold':
+            # set visibility
+            self.cell_masks.accepted_labels.visible = False
+            self.cell_masks.rejected_labels.visible = False
+            self.snr_extension.image_layer.visible = True
+            self.movie.visible = True
+
+            # select layer
+            self.cell_masks.accepted_labels.selected = False
+            self.cell_masks.rejected_labels.selected = False
+            self.snr_extension.image_layer.selected = True
+            self.movie.selected = False
+
+        else:
+            raise ValueError(f'{mode} is not a recognized mode')
+
+        self._mode = mode
+
+    @property
+    def dataset_loaded(self) -> bool:
+        return self._dataset_loaded
