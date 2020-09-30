@@ -78,7 +78,7 @@ class CalciumCurator:
             if selected_indices is not None:
                 selected_masks = selected_indices - 1
                 self.line_plot.displayed_traces = {}
-                cell_masks.selected_mask = selected_masks
+                self.cell_masks.selected_mask = selected_masks
                 if np.all(selected_masks >= 0):
                     update_plot(cell_indices=selected_masks)
             else:
@@ -133,6 +133,9 @@ class CalciumCurator:
         self.mode_controls.manual_mode_button.clicked.connect(
             self._on_manual_mode_clicked
         )
+        self.mode_controls.focus_mode_button.clicked.connect(
+            self._on_focus_mode_clicked
+        )
         self.mode_controls.snr_mode_button.clicked.connect(
             self._on_snr_mode_clicked
         )
@@ -141,6 +144,7 @@ class CalciumCurator:
         )
 
         self._dataset_loaded = True
+
         self.mode = 'manual'
         self.viewer.show()
 
@@ -166,6 +170,26 @@ class CalciumCurator:
 
             # update the UI
             self.mode_controls.manual_mode_button.setChecked(True)
+
+        elif mode == 'focus':
+            # set visibility
+            self.cell_masks.accepted_labels.visible = True
+            self.cell_masks.rejected_labels.visible = True
+            self.snr_extension.image_layer.visible = False
+            self.movie.visible = True
+
+            # select layer
+            self.cell_masks.accepted_labels.selected = True
+            self.cell_masks.rejected_labels.selected = False
+            self.snr_extension.image_layer.selected = False
+            self.movie.selected = False
+
+            # update the cell masks
+            self.cell_masks.selected_mask = [0]
+            self.cell_masks.mode = 'focus'
+
+            # update the UI
+            self.mode_controls.focus_mode_button.setChecked(True)
 
         elif mode == 'snr_threshold':
             # set visibility
@@ -194,6 +218,9 @@ class CalciumCurator:
 
     def _on_manual_mode_clicked(self):
         self.mode = 'manual'
+
+    def _on_focus_mode_clicked(self):
+        self.mode = 'focus'
 
     def _on_snr_mode_clicked(self):
         self.mode = 'snr_threshold'

@@ -9,6 +9,7 @@ class ContourManager:
         im_shape: tuple,
         contours: list = [],
         initial_state: Union[str, np.ndarray] = "good",
+        mode: str = 'all',
     ):
         self._contours = contours
         self._contour_labels = np.arange(1, len(contours) + 1)
@@ -25,6 +26,15 @@ class ContourManager:
             raise TypeError("initial_state should be a string or numpy array")
 
         self._selected_contours = {}
+        self.mode = mode
+
+    @property
+    def mode(self) -> str:
+        return self._mode
+
+    @mode.setter
+    def mode(self, mode: str):
+        self._mode = mode
 
     @property
     def contours(self) -> list:
@@ -64,8 +74,22 @@ class ContourManager:
 
     def make_accepted_mask(self):
         accepted_contours_image = np.zeros(self._im_shape, dtype=np.uint16)
-        labels = self._contour_labels[self.good_contour]
-        for label, cont in zip(labels, self.accepted_contours):
+        if self.mode == 'all':
+            labels = self._contour_labels[self.good_contour]
+            accepted_contours = self.accepted_contours
+
+        elif self.mode == 'focus':
+            selected_contours = np.array(list(self.selected_contours))
+            accepted_contour_indices = np.argwhere(self.good_contour)
+            selected_accepted = np.intersect1d(
+                selected_contours,
+                accepted_contour_indices,
+                return_indices=False,
+            )
+            labels = self._contour_labels[selected_accepted]
+            accepted_contours = [self.contours[i] for i in selected_accepted]
+
+        for label, cont in zip(labels, accepted_contours):
             accepted_contours_image[
                 np.round(cont[:, 0]).astype("int"),
                 np.round(cont[:, 1]).astype("int"),
@@ -75,8 +99,23 @@ class ContourManager:
 
     def make_rejected_mask(self):
         rejected_contours_image = np.zeros(self._im_shape, dtype=np.uint16)
-        labels = self._contour_labels[np.logical_not(self.good_contour)]
-        for label, cont in zip(labels, self.rejected_contours):
+        if self.mode == 'all':
+            labels = self._contour_labels[np.logical_not(self.good_contour)]
+            rejected_contours = self.rejected_contours
+        elif self.mode == 'focus':
+            selected_contours = np.array(list(self.selected_contours))
+            rejected_contour_indices = np.argwhere(
+                np.logical_not(self.good_contour)
+            )
+            selected_rejected = np.intersect1d(
+                selected_contours,
+                rejected_contour_indices,
+                return_indices=False,
+            )
+            labels = self._contour_labels[selected_rejected]
+            rejected_contours = [self.contours[i] for i in selected_rejected]
+
+        for label, cont in zip(labels, rejected_contours):
             rejected_contours_image[
                 np.round(cont[:, 0]).astype("int"),
                 np.round(cont[:, 1]).astype("int"),
