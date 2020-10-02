@@ -42,6 +42,7 @@ class CellMask:
         selection_layer_name: str = 'selected_cell',
         accepted_layer_name: str = 'accepted_mask',
         rejected_layer_name: str = 'rejected_mask',
+        mode: str = 'all',
     ):
         self.selected_shapes = viewer.add_shapes(name=selection_layer_name)
 
@@ -55,6 +56,8 @@ class CellMask:
         )
 
         viewer.bind_key("t", self.toggle_selected_mask)
+
+        self._mode = mode
 
     def initialize_masks(
         self,
@@ -103,8 +106,32 @@ class CellMask:
                 edge_color="green",
             )
 
+            rejected_mask = self.masks.make_rejected_mask()
+            self.rejected_labels.data = rejected_mask
+
+            accepted_mask = self.masks.make_accepted_mask()
+            self.accepted_labels.data = accepted_mask
+
+    @property
+    def mode(self) -> str:
+        return self._mode
+
+    @mode.setter
+    def mode(self, mode: str):
+        old_mode = self._mode
+
+        if mode != old_mode:
+            self.masks.mode = mode
+            self._mode = mode
+
+            rejected_mask = self.masks.make_rejected_mask()
+            self.rejected_labels.data = rejected_mask
+
+            accepted_mask = self.masks.make_accepted_mask()
+            self.accepted_labels.data = accepted_mask
+
     def toggle_selected_mask(self, viewer):
-        selected_contours = list(self.masks.selected_contours)
+        selected_contours = list(self.selected_mask)
         if len(selected_contours) > 0:
             good_contour = self.masks.good_contour
             good_contour[selected_contours] = ~good_contour[selected_contours]
