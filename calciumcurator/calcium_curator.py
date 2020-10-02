@@ -28,6 +28,11 @@ class CalciumCurator:
             visible=True,
             name='movie',
         )
+        # todo: add this to snr extension
+        self.snr = snr
+        self.f = f
+        self.save_path = output
+
         self.movie = self.viewer.layers['movie']
 
         # add the SNR widgets
@@ -100,25 +105,6 @@ class CalciumCurator:
 
         self.viewer.mouse_drag_callbacks.append(select_on_click)
 
-        @self.viewer.bind_key("q")
-        def save_cells(viewer):
-            snr_thresh = self.snr_extension.threshold
-            accepted_cells_indices = np.argwhere(
-                snr[cell_masks.masks.good_contour] > snr_thresh
-            )
-            accepted_cells = np.zeros((f.shape[0],))
-            accepted_cells[accepted_cells_indices] = 1
-            if cells is not None:
-                good_cells = np.hstack(
-                    (
-                        np.expand_dims(accepted_cells, 1),
-                        np.expand_dims(cells[:, 1], 1),
-                    )
-                )
-            else:
-                good_cells = accepted_cells
-            np.save(output, good_cells)
-
         self.mode_controls = ModeControls(
             n_cells=len(self.cell_masks.masks.contours)
         )
@@ -134,6 +120,7 @@ class CalciumCurator:
         self.mode_controls.manual_curation_controls.selected_cell_spinbox.valueChanged.connect(
             self._on_selected_cell_changed
         )
+        self.mode_controls.save_button.clicked.connect(self.save_cells)
         self.viewer.window.add_dock_widget(
             self.mode_controls, name='mode', area='right'
         )
@@ -248,6 +235,24 @@ class CalciumCurator:
                 self._update_plot(cell_indices=selected_masks)
         else:
             self.line_plot.clear()
+
+    def save_cells(self, viewer):
+        snr_thresh = self.snr_extension.threshold
+        accepted_cells_indices = np.argwhere(
+            self.snr[self.cell_masks.masks.good_contour] > snr_thresh
+        )
+        accepted_cells = np.zeros((self.f.shape[0],))
+        accepted_cells[accepted_cells_indices] = 1
+        # if cells is not None:
+        #     good_cells = np.hstack(
+        #         (
+        #             np.expand_dims(accepted_cells, 1),
+        #             np.expand_dims(cells[:, 1], 1),
+        #         )
+        #     )
+        # else:
+        good_cells = accepted_cells
+        np.save(self.save_path, good_cells)
 
     def _update_plot(self, cell_indices):
         self.line_plot.displayed_traces = cell_indices

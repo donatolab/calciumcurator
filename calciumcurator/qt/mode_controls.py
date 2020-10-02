@@ -17,19 +17,22 @@ class ModeControls(QWidget):
 
         vbox_layout = QVBoxLayout()
 
-        self.load_controls = LoadControls(parent=self)
-        vbox_layout.addWidget(self.load_controls)
-
         self.manual_curation_controls = ManualCurationControls(
             n_cells=n_cells, parent=self
         )
         vbox_layout.addWidget(self.manual_curation_controls)
-        snr_title = QLabel('<b> 2. threshold snr <\b>')
+        snr_title = QLabel('<b>2. threshold snr<\b>')
         snr_title.setMaximumHeight(20)
         vbox_layout.addWidget(snr_title)
         self.snr_mode_button = QPushButton('display SNR')
         self.snr_mode_button.setCheckable(True)
         vbox_layout.addWidget(self.snr_mode_button)
+
+        save_title = QLabel('<b>3. save<\b>')
+        save_title.setMaximumHeight(20)
+        vbox_layout.addWidget(save_title)
+        self.save_button = QPushButton('save curated cells')
+        vbox_layout.addWidget(self.save_button)
 
         button_group = QButtonGroup()
         button_group.addButton(
