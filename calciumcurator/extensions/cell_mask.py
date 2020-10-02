@@ -106,6 +106,12 @@ class CellMask:
                 edge_color="green",
             )
 
+            rejected_mask = self.masks.make_rejected_mask()
+            self.rejected_labels.data = rejected_mask
+
+            accepted_mask = self.masks.make_accepted_mask()
+            self.accepted_labels.data = accepted_mask
+
     @property
     def mode(self) -> str:
         return self._mode
@@ -125,7 +131,7 @@ class CellMask:
             self.accepted_labels.data = accepted_mask
 
     def toggle_selected_mask(self, viewer):
-        selected_contours = list(self.selected_contours)
+        selected_contours = list(self.selected_mask)
         if len(selected_contours) > 0:
             good_contour = self.masks.good_contour
             good_contour[selected_contours] = ~good_contour[selected_contours]

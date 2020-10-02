@@ -69,43 +69,33 @@ class CalciumCurator:
 
         self.viewer.dims.events.current_step.connect(update_line)
 
-        def update_plot(cell_indices):
-            self.line_plot.displayed_traces = cell_indices
-            current_frame = self.viewer.dims.point[0]
-            self.line_plot.current_x = current_frame
-
-        def update_selection(selected_indices: Optional[np.ndarray] = None):
-            if selected_indices is not None:
-                selected_masks = selected_indices - 1
-                self.line_plot.displayed_traces = {}
-                self.cell_masks.selected_mask = selected_masks
-                if np.all(selected_masks >= 0):
-                    update_plot(cell_indices=selected_masks)
-            else:
-                self.line_plot.clear()
-
         def select_on_click(viewer, event):
             selected_layers = viewer.layers.selected
             if len(selected_layers) == 1:
 
                 if isinstance(selected_layers[0], napari.layers.Labels):
                     selected_index = selected_layers[0]._value
-                    update_selection(np.array([selected_index], dtype=np.int))
+
+                    if selected_index is not None:
+                        selected_index = [selected_index - 1]
+                        self.selected_cell = np.array(
+                            selected_index, dtype=np.int
+                        )
                 elif (snr_mask is not None) and (snr is not None):
                     if selected_layers[0] is self.snr_extension.image_layer:
                         visual = viewer.window.qt_viewer.layer_to_visual[
-                            cell_masks.accepted_labels
+                            self.cell_masks.accepted_labels
                         ]
                         pos = list(event.pos)
-                        cell_masks.accepted_labels.position = visual._transform_position(
+                        self.cell_masks.accepted_labels.position = visual._transform_position(
                             pos
                         )
                         selected_index = (
-                            cell_masks.accepted_labels._get_value()
+                            self.cell_masks.accepted_labels._get_value()
                         )
 
                         if selected_index is not None:
-                            update_selection(np.array([selected_index]))
+                            self.selected_cell = [selected_index - 1]
             yield
 
         self.viewer.mouse_drag_callbacks.append(select_on_click)
@@ -129,15 +119,20 @@ class CalciumCurator:
                 good_cells = accepted_cells
             np.save(output, good_cells)
 
-        self.mode_controls = ModeControls()
-        self.mode_controls.manual_mode_button.clicked.connect(
+        self.mode_controls = ModeControls(
+            n_cells=len(self.cell_masks.masks.contours)
+        )
+        self.mode_controls.manual_curation_controls.manual_mode_button.clicked.connect(
             self._on_manual_mode_clicked
         )
-        self.mode_controls.focus_mode_button.clicked.connect(
+        self.mode_controls.manual_curation_controls.focus_mode_button.clicked.connect(
             self._on_focus_mode_clicked
         )
         self.mode_controls.snr_mode_button.clicked.connect(
             self._on_snr_mode_clicked
+        )
+        self.mode_controls.manual_curation_controls.selected_cell_spinbox.valueChanged.connect(
+            self._on_selected_cell_changed
         )
         self.viewer.window.add_dock_widget(
             self.mode_controls, name='mode', area='right'
@@ -145,7 +140,8 @@ class CalciumCurator:
 
         self._dataset_loaded = True
 
-        self.mode = 'manual'
+        self.mode = 'all'
+        self.selected_cell = [0]
         self.viewer.show()
 
     @property
@@ -155,7 +151,7 @@ class CalciumCurator:
     @mode.setter
     def mode(self, mode: str):
 
-        if mode == 'manual':
+        if mode == 'all':
             # set visibility
             self.cell_masks.accepted_labels.visible = True
             self.cell_masks.rejected_labels.visible = False
@@ -168,8 +164,13 @@ class CalciumCurator:
             self.snr_extension.image_layer.selected = False
             self.movie.selected = False
 
+            # set the mode
+            self.cell_masks.mode = 'all'
+
             # update the UI
-            self.mode_controls.manual_mode_button.setChecked(True)
+            self.mode_controls.manual_curation_controls.manual_mode_button.setChecked(
+                True
+            )
 
         elif mode == 'focus':
             # set visibility
@@ -185,11 +186,15 @@ class CalciumCurator:
             self.movie.selected = False
 
             # update the cell masks
-            self.cell_masks.selected_mask = [0]
+            # if no cell is selected, select the first one
+            if len(self.selected_cell) == 0:
+                self.cell_masks.selected_mask = [0]
             self.cell_masks.mode = 'focus'
 
             # update the UI
-            self.mode_controls.focus_mode_button.setChecked(True)
+            self.mode_controls.manual_curation_controls.focus_mode_button.setChecked(
+                True
+            )
 
         elif mode == 'snr_threshold':
             # set visibility
@@ -216,11 +221,50 @@ class CalciumCurator:
     def dataset_loaded(self) -> bool:
         return self._dataset_loaded
 
+    @property
+    def selected_cell(self) -> set:
+        return self.cell_masks.selected_mask
+
+    @selected_cell.setter
+    def selected_cell(self, selected_cell: Union[set, list]):
+        self.cell_masks.selected_mask = set(selected_cell)
+        self._update_selection()
+
+        self.mode_controls.manual_curation_controls.selected_cell_spinbox.blockSignals(
+            True
+        )
+        self.mode_controls.manual_curation_controls.selected_cell_spinbox.setValue(
+            list(self.cell_masks.selected_mask)[0]
+        )
+        self.mode_controls.manual_curation_controls.selected_cell_spinbox.blockSignals(
+            False
+        )
+
+    def _update_selection(self, selected_indices: Optional[np.ndarray] = None):
+        selected_masks = np.asarray(list(self.cell_masks.selected_mask))
+        if len(selected_masks) > 0:
+            self.line_plot.displayed_traces = {}
+            if np.all(selected_masks >= 0):
+                self._update_plot(cell_indices=selected_masks)
+        else:
+            self.line_plot.clear()
+
+    def _update_plot(self, cell_indices):
+        self.line_plot.displayed_traces = cell_indices
+        current_frame = self.viewer.dims.point[0]
+        self.line_plot.current_x = current_frame
+
     def _on_manual_mode_clicked(self):
-        self.mode = 'manual'
+        self.mode = 'all'
 
     def _on_focus_mode_clicked(self):
         self.mode = 'focus'
 
     def _on_snr_mode_clicked(self):
         self.mode = 'snr_threshold'
+
+    def _on_selected_cell_changed(self):
+        new_selection = (
+            self.mode_controls.manual_curation_controls.selected_cell_spinbox.value()
+        )
+        self.selected_cell = [new_selection]
