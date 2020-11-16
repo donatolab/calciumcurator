@@ -52,6 +52,7 @@ class LinePlotWidget(QWidget):
             curve_item = pg.PlotCurveItem(x, y)
             self._plot.addItem(curve_item)
             self._curves.append(curve_item)
+        self._plot.plotItem.setMouseEnabled(y=False)
         self.vbox.addWidget(new_plot)
 
     def add_events(self, events, f_trace):
