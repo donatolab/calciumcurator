@@ -1,6 +1,7 @@
 from typing import Optional, Union
 
 import napari
+from napari._qt.qt_error_notification import NapariNotification
 import numpy as np
 
 from .extensions import CellMask, LinePlot, ThresholdImage
@@ -243,16 +244,19 @@ class CalciumCurator:
         )
         accepted_cells = np.zeros((self.f.shape[0],))
         accepted_cells[accepted_cells_indices] = 1
-        # if cells is not None:
-        #     good_cells = np.hstack(
-        #         (
-        #             np.expand_dims(accepted_cells, 1),
-        #             np.expand_dims(cells[:, 1], 1),
-        #         )
-        #     )
-        # else:
+
         good_cells = accepted_cells
-        np.save(self.save_path, good_cells)
+        good_cells_path = self.save_path + '_iscell.npy'
+        np.save(good_cells_path, good_cells)
+
+        f_path = self.save_path + '_F.npy'
+        np.save(f_path, self.f)
+
+        path_message = f'files saved: {f_path}, {good_cells_path}'
+        notification = NapariNotification(
+            message=path_message, severity='info'
+        )
+        notification.show()
 
     def _update_plot(self, cell_indices):
         self.line_plot.displayed_traces = cell_indices
