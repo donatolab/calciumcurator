@@ -99,11 +99,18 @@ class CellMask:
             self.masks.selected_contours = set(selected_mask)
             selection_bbox = self._calculate_mask_bbox(selected_mask)
 
+            # the selection box is green if the selected contour is accepted
+            # and magenta if it is rejected
+            if self.masks.good_contour[list(selected_mask)] is True:
+                edge_color = 'green'
+            else:
+                edge_color = 'magenta'
+
             self.selected_shapes.add(
                 selection_bbox,
                 shape_type="rectangle",
                 face_color="transparent",
-                edge_color="green",
+                edge_color=edge_color,
             )
 
             rejected_mask = self.masks.make_rejected_mask()
@@ -134,7 +141,8 @@ class CellMask:
         selected_contours = list(self.selected_mask)
         if len(selected_contours) > 0:
             good_contour = self.masks.good_contour
-            good_contour[selected_contours] = ~good_contour[selected_contours]
+            new_state = ~good_contour[selected_contours]
+            good_contour[selected_contours] = new_state
             self.masks.good_contour = good_contour
 
             good_mask_image = self.masks.make_accepted_mask()
@@ -142,6 +150,15 @@ class CellMask:
 
             self.accepted_labels.data = good_mask_image
             self.rejected_labels.data = bad_mask_image
+
+            # update the colors of the selected shapes
+            new_colors = []
+            for cont in new_state:
+                if cont:
+                    new_colors.append('green')
+                else:
+                    new_colors.append('magenta')
+            self.selected_shapes.edge_color = new_colors
 
     def _calculate_mask_bbox(self, mask_indices: list) -> list:
         selection_bbox = []
