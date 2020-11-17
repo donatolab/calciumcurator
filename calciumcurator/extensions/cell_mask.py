@@ -101,7 +101,7 @@ class CellMask:
 
             # the selection box is green if the selected contour is accepted
             # and magenta if it is rejected
-            if self.masks.good_contour[list(selected_mask)] is True:
+            if np.all(self.masks.good_contour[list(selected_mask)]):
                 edge_color = 'green'
             else:
                 edge_color = 'magenta'
