@@ -14,7 +14,7 @@ jobs:
       - name: Get version from tag
         run: |
           TAG="${GITHUB_REF/refs\/tags\/v/}"
-          echo "::set-env name=tag::$TAG"
+          echo "release_tag=$TAG" >> $GITHUB_ENV
       - name: Checkout code
         uses: actions/checkout@master
       - name: Install Python
@@ -35,7 +35,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
           tag_name: ${{ github.ref }}
-          release_name: ${{ env.tag }}
+          release_name: ${{ release_tag }}
           draft: false
           prerelease: ${{ contains(github.ref, 'rc') }}
       - name: Upload Release Asset
@@ -44,8 +44,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/calciumcurator-${{ env.tag }}.tar.gz
-          asset_name: calciumcurator-${{ env.tag }}.tar.gz
+          asset_path: ./dist/calciumcurator-${{ release_tag }}.tar.gz
+          asset_name: calciumcurator-${{ release_tag }}.tar.gz
           asset_content_type: application/gzip
       - name: Publish PyPI Package
         uses: pypa/gh-action-pypi-publish@master
