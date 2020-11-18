@@ -2,6 +2,7 @@ import argparse
 import os
 
 import napari
+from skimage import io
 
 from .calcium_curator import CalciumCurator
 from .io.caiman.caiman_reader import caiman_reader
@@ -12,18 +13,20 @@ def parse_args():
     parser = argparse.ArgumentParser(description="view-caiman")
     parser.add_argument("--results", default="", type=str, help="options")
     parser.add_argument("--image", default="", type=str, help="options")
+    parser.add_argument("--mip", default="", type=str, help="options")
     parser.add_argument("--output", default="", type=str, help="options")
 
     args = parser.parse_args()
     results_file = args.results
     image_path = args.image
+    mip_path = args.mip
     output_dir = args.output
 
-    return results_file, image_path, output_dir
+    return results_file, image_path, output_dir, mip_path
 
 
 def view_caiman():
-    results_file, image_path, output_dir = parse_args()
+    results_file, image_path, output_dir, mip_path = parse_args()
 
     cnm_obj = load_dict_from_hdf5(results_file)
 
@@ -58,11 +61,17 @@ def view_caiman():
         is_cell,
     ) = caiman_reader(results_file, image_path)
 
+    if mip_path == "":
+        mip = None
+    else:
+        mip = io.imread(mip_path)
+
     with napari.gui_qt():
         CalciumCurator(
             img=im_registered,
             data_range=data_range,
             cell_masks=cell_masks,
+            mip=mip,
             initial_cell_masks_state=initial_cell_masks_state,
             f=f_traces,
             snr=snr,

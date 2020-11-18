@@ -14,6 +14,7 @@ class CalciumCurator:
         img: np.ndarray,
         data_range,
         cell_masks: np.ndarray,
+        mip: Optional[np.ndarray] = None,
         initial_cell_masks_state: Union[str, np.ndarray] = 'good',
         f: Optional[np.ndarray] = None,
         spikes: Optional[np.ndarray] = None,
@@ -29,6 +30,12 @@ class CalciumCurator:
             visible=True,
             name='movie',
         )
+        if mip is not None:
+            self.mip = self.viewer.add_image(
+                mip, name='MIP', colormap='viridis', visible=False
+            )
+        else:
+            self.mip = None
         # todo: add this to snr extension
         self.snr = snr
         self.f = f
