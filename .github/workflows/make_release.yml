@@ -43,7 +43,7 @@ jobs:
           BUILD_PATH=./dist/calciumcurator-${release_tag}.tar.gz
           echo "build_path=${BUILD_PATH}" >> $GITHUB_ENV
           BUILD_NAME=calciumcurator-${release_tag}.tar.gz
-          echo "build_name=${BUILD_NAME}" >> >> $GITHUB_ENV
+          echo "build_name=${BUILD_NAME}" >> $GITHUB_ENV
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
