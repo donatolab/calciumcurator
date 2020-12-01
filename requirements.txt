@@ -1,5 +1,5 @@
 h5py
-napari[all]
+napari[all]==0.3.8
 numpy
 pyqtgraph
 scikit-image
