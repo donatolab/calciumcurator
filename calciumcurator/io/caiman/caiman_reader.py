@@ -58,12 +58,13 @@ def caiman_reader(
 
     # make the contours
     estimates = cnm_obj["estimates"]
-    if estimates["dims"] is None:
-        estimates["dims"] = im_registered.shape[1::]
+    plane_dims = cnm_obj["dims"]
+    if plane_dims is None:
+        plane_dims = im_registered.shape[1::]
     img_components = (
         estimates["A"]
         .toarray()
-        .reshape((estimates["dims"][0], estimates["dims"][1], -1), order="F")
+        .reshape((plane_dims[0], plane_dims[1], -1), order="F")
         .transpose([2, 0, 1])
     )
     img_components = (
@@ -78,7 +79,11 @@ def caiman_reader(
     initial_cell_masks_state[good_indices] = True
 
     # calculate the SNR and make the mask
+    # note that we clean the SNR and set inf snr values to the max
+    # non-inf value
     snr = estimates["SNR_comp"]
+    max_snr = np.nanmax(snr[snr != np.inf])
+    snr[snr == np.inf] = max_snr
     im_shape = im_registered.shape
     snr_mask = make_scalar_mask(
         cell_masks, im_shape=(im_shape[-2], im_shape[-1]), values=snr
